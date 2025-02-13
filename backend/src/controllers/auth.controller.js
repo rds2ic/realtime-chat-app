@@ -4,10 +4,10 @@ import cloudinary from "../lib/cloudinary.js";
 import bcrypt from "bcryptjs";
 
 export const signup = async (req, res) => {
-  const { fullName, email, password } = req.body;
+  const { fullName, username, email, password } = req.body;
   try {
     // Peformding data validation on the password length
-    if (!fullName || !email | !password) {
+    if (!fullName || !email | !password | !username) {
       return res.status(400).json({ message: "All fields are required" });
     }
     if (password.length < 6) {
@@ -22,13 +22,22 @@ export const signup = async (req, res) => {
         .status(400)
         .json({ message: "Email is already associated with an account." });
 
+    const userN = await User.findOne({ username });
+    if (userN)
+      return res
+        .status(400)
+        .json({ message: "Username is already associated with an account." });
+
     const salt = await bcrypt.genSalt(10); // Making our salt for the hash
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
       fullName,
+      username,
       email,
       password: hashedPassword,
+      friends: [],
+      friend_requests: [],
     });
 
     if (newUser) {
@@ -38,8 +47,11 @@ export const signup = async (req, res) => {
       res.status(201).json({
         _id: newUser._id,
         fullName: newUser.fullName,
+        username: newUser.username,
         email: newUser.email,
         profilePic: newUser.profilePic,
+        friends: [],
+        friend_requests: [],
       });
     } else {
       res.status(400).json({ message: "Invalid user data." });
@@ -51,9 +63,14 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { username, email, password } = req.body;
   try {
-    const user = await User.findOne({ email });
+    let user;
+    if (email) {
+      user = await User.findOne({ email });
+    } else if (username) {
+      user = await User.findOne({ username });
+    }
     if (!user) {
       return res.status(400).json({ message: "Invalid Credentials" });
     }
@@ -67,8 +84,11 @@ export const login = async (req, res) => {
     res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
+      username: user.username,
       email: user.email,
       profilePic: user.profilePic,
+      friends: user.friends,
+      friend_requests: user.friend_requests,
     });
   } catch (error) {
     console.log("Error in signup controller: ", error.message);

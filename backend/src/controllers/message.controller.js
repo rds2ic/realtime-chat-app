@@ -5,10 +5,10 @@ import { getReceiverSocketId, io } from "../lib/socket.js";
 
 export const getUsersForSidebar = async (req, res) => {
   try {
-    const loggedInUserId = req.user._id;
+    const friends = req.user.friends;
     const filteredUsers = await User.find({
-      _id: { $ne: loggedInUserId },
-    }).select("-password"); // this logic is finding all users with user id not equal ($ne) to the one that is logged in
+      _id: { $in: friends },
+    }).select("-password");
     res.status(200).json(filteredUsers);
   } catch (error) {
     console.log("Error in getUsersForSidebar: ", error.message);

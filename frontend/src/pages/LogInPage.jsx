@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, MessageSquare, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import AuthImagePattern from "../components/AuthImagePattern";
 
 const LogInPage = () => {
   const [showPassword, setShowPassword] = useState(false); // state for whether the password is shown when typed
   const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
+    identifier: "",
     password: "",
   });
 
@@ -16,7 +15,10 @@ const LogInPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    login(formData);
+    const data = formData.identifier.includes("@")
+      ? { email: formData.identifier, password: formData.password }
+      : { username: formData.identifier, password: formData.password };
+    login(data);
   };
   return (
     <div className="h-screen grid lg:grid-cols-2">
@@ -41,20 +43,22 @@ const LogInPage = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-medium">Email</span>
+                <span className="label-text font-medium">
+                  Username or Email
+                </span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-base-content/40" />
+                  <User className="h-5 w-5 text-base-content/40" />
                 </div>
                 <input
-                  type="email"
+                  type="text"
                   className={`input input-bordered w-full pl-10`}
                   placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  value={formData.identifier}
+                  onChange={(e) => {
+                    setFormData({ ...formData, identifier: e.target.value });
+                  }}
                 />
               </div>
             </div>
